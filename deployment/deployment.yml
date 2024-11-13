@@ -313,6 +313,9 @@ spec:
       containers:
       - name: server
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/currencyservice:latest
+        env:
+          - name: ENABLE_PROFILING
+            value: "false"
         ports:
         - containerPort: 7000
         envFrom:
