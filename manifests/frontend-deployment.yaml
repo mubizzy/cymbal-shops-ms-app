@@ -77,7 +77,7 @@ spec:
                 configMapKeyRef:
                   key: SHOPPING_ASSISTANT_SERVICE_ADDR
                   name: svc-addresses-env
-          image: obimadu/frontend
+          image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/frontendservice:latest
           name: frontendservice
           ports:
             - containerPort: 8080

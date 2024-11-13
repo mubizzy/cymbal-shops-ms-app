@@ -8,9 +8,13 @@ metadata:
     io.kompose.service: frontend
   name: frontend
 spec:
+  type: LoadBalancer      # Added this line to specify LoadBalancer type
   ports:
-    - name: "8080"
+    - name: "http"        # Changed name to be more descriptive
       port: 8080
       targetPort: 8080
+      protocol: TCP       # Added protocol specification
   selector:
     io.kompose.service: frontend
+  sessionAffinity: None   # Added explicit session affinity setting
+  externalTrafficPolicy: Cluster  # Added external traffic policy
