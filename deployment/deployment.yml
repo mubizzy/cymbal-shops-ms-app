@@ -1,3 +1,122 @@
+---
+# Centralized Service Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-addresses
+data:
+  AD_SERVICE_ADDR: "adservice:9555"
+  CART_SERVICE_ADDR: "cartservice:7070"
+  CHECKOUT_SERVICE_ADDR: "checkoutservice:5050"
+  CURRENCY_SERVICE_ADDR: "currencyservice:7000"
+  EMAIL_SERVICE_ADDR: "emailservice:8080"
+  FRONTEND_ADDR: "frontend:8080"
+  PAYMENT_SERVICE_ADDR: "paymentservice:50051"
+  PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+  RECOMMENDATION_SERVICE_ADDR: "recommendationservice:8080"
+  SHIPPING_SERVICE_ADDR: "shippingservice:50051"
+  SHOPPING_ASSISTANT_SERVICE_ADDR: "shoppingassistantservice:8080"
+
+---
+# Frontend Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: server
+          image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/frontendservice:latest
+          ports:
+          - containerPort: 8080
+          envFrom:
+          - configMapRef:
+              name: service-addresses
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-external
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# Checkout Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkoutservice
+spec:
+  selector:
+    matchLabels:
+      app: checkoutservice
+  template:
+    metadata:
+      labels:
+        app: checkoutservice
+    spec:
+      containers:
+        - name: server
+          image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/checkoutservice:latest
+          ports:
+          - containerPort: 5050
+          envFrom:
+          - configMapRef:
+              name: service-addresses
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkoutservice
+spec:
+  type: ClusterIP
+  selector:
+    app: checkoutservice
+  ports:
+  - port: 5050
+    targetPort: 5050
+
+---
+# Email Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,9 +135,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/emailservice:latest
         ports:
         - containerPort: 8080
-        env:
-        - name: PORT
-          value: "8080"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         readinessProbe:
           httpGet:
             path: /health
@@ -44,64 +163,11 @@ spec:
   selector:
     app: emailservice
   ports:
-  - port: 5000
+  - port: 8080
     targetPort: 8080
+
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: checkoutservice
-spec:
-  selector:
-    matchLabels:
-      app: checkoutservice
-  template:
-    metadata:
-      labels:
-        app: checkoutservice
-    spec:
-      containers:
-        - name: server
-          image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/checkoutservice:latest
-          ports:
-          - containerPort: 5050
-          env:
-          - name: PORT
-            value: "5050"
-          - name: PRODUCT_CATALOG_SERVICE_ADDR
-            value: "productcatalogservice:3550"
-          - name: SHIPPING_SERVICE_ADDR
-            value: "shippingservice:50051"
-          - name: PAYMENT_SERVICE_ADDR
-            value: "paymentservice:50051"
-          - name: EMAIL_SERVICE_ADDR
-            value: "emailservice:5000"
-          - name: CURRENCY_SERVICE_ADDR
-            value: "currencyservice:7000"
-          - name: CART_SERVICE_ADDR
-            value: "cartservice:7070"
-          - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-            value: "disabled"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: checkoutservice
-spec:
-  type: ClusterIP
-  selector:
-    app: checkoutservice
-  ports:
-  - port: 5050
-    targetPort: 5050
----
+# Recommendation Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -120,13 +186,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/recommendationservice:latest
         ports:
         - containerPort: 8080
-        env:
-        - name: PORT
-          value: "8080"
-        - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: "productcatalogservice:3550"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 100m
@@ -146,76 +208,9 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
+
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-spec:
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-        - name: server
-          image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/frontendservice:latest
-          ports:
-          - containerPort: 8080
-          env:
-          - name: PORT
-            value: "8080"
-          - name: PRODUCT_CATALOG_SERVICE_ADDR
-            value: "productcatalogservice:3550"
-          - name: CURRENCY_SERVICE_ADDR
-            value: "currencyservice:7000"
-          - name: CART_SERVICE_ADDR
-            value: "cartservice:7070"
-          - name: RECOMMENDATION_SERVICE_ADDR
-            value: "recommendationservice:8080"
-          - name: SHIPPING_SERVICE_ADDR
-            value: "shippingservice:50051"
-          - name: CHECKOUT_SERVICE_ADDR
-            value: "checkoutservice:5050"
-          - name: AD_SERVICE_ADDR
-            value: "adservice:9555"
-          - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-            value: "disabled"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-spec:
-  type: NodePort
-  selector:
-    app: frontend
-  ports:
-  - port: 80
-    targetPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-external
-spec:
-  type: LoadBalancer
-  selector:
-    app: frontend
-  ports:
-  - port: 80
-    targetPort: 8080
----
+# Cart Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -234,11 +229,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/cartservice:latest
         ports:
         - containerPort: 7070
-        env:
-        - name: REDIS_ADDR
-          value: "redis-cart:6379"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 200m
@@ -258,7 +251,9 @@ spec:
   ports:
   - port: 7070
     targetPort: 7070
+
 ---
+# Redis Cart
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -302,7 +297,9 @@ spec:
   ports:
   - port: 6379
     targetPort: 6379
+
 ---
+# Currency Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -321,11 +318,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/currencyservice:latest
         ports:
         - containerPort: 7000
-        env:
-        - name: PORT
-          value: "7000"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 100m
@@ -345,7 +340,9 @@ spec:
   ports:
   - port: 7000
     targetPort: 7000
+
 ---
+# Payment Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -364,11 +361,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/paymentservice:latest
         ports:
         - containerPort: 50051
-        env:
-        - name: PORT
-          value: "50051"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 100m
@@ -388,7 +383,9 @@ spec:
   ports:
   - port: 50051
     targetPort: 50051
+
 ---
+# Product Catalog Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -407,11 +404,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/productcatalogservice:latest
         ports:
         - containerPort: 3550
-        env:
-        - name: PORT
-          value: "3550"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 100m
@@ -431,7 +426,9 @@ spec:
   ports:
   - port: 3550
     targetPort: 3550
+
 ---
+# Shipping Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -450,11 +447,9 @@ spec:
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/shippingservice:latest
         ports:
         - containerPort: 50051
-        env:
-        - name: PORT
-          value: "50051"
-        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
-          value: "disabled"
+        envFrom:
+        - configMapRef:
+            name: service-addresses
         resources:
           requests:
             cpu: 100m
