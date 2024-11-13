@@ -313,11 +313,15 @@ spec:
       containers:
       - name: server
         image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/currencyservice:latest
-        env:
-          - name: DISABLE_PROFILER
-            value: "1"
         ports:
         - containerPort: 7000
+        env:
+        - name: PORT
+          value: "7000"
+        - name: DISABLE_TRACING
+          value: "1"
+        - name: DISABLE_PROFILER
+          value: "1"
         envFrom:
         - configMapRef:
             name: service-addresses
