@@ -21,7 +21,7 @@ spec:
         io.kompose.service: emailservice
     spec:
       containers:
-        - image: obimadu/emailservice
+        - image: 590184027729.dkr.ecr.us-east-1.amazonaws.com/cymbal-shops-ms-app/emailservice:latest
           name: emailservice
           ports:
             - containerPort: 8080
