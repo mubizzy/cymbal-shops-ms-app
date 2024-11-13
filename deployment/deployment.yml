@@ -143,14 +143,6 @@ spec:
         envFrom:
         - configMapRef:
             name: service-addresses
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
         resources:
           requests:
             cpu: 100m
